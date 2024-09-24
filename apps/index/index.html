@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+  <title>FeHelper</title>
+  <meta name="Robots" content="INDEX,FOLLOW">
+  <meta name="keywords"
+    content="FeHelper,WEB前端助手,JSON格式化,JSON对比,信息编解码,代码美化,代码压缩,二维码生成,二维码解码,图片Base64转换,Markdown,随机密码生成器,正则表达式,时间戳转换,便签笔记,进制转换,贷款计算器">
+  <meta name="description"
+    content="WEB前端助手：FeHelper，浏览器插件，包含一些前端实用的工具，如JSON格式化,JSON对比,信息编解码,代码美化,代码压缩,二维码生成,二维码解码,图片Base64转换,Markdown,随机密码生成器,正则表达式,时间戳转换,便签笔记,进制转换,贷款计算器等">
+  <link rel="chrome-webstore-item" href="https://chrome.google.com/webstore/detail/pkgccpejnmalmdinmhkkfafefagiiiad">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta charset="UTF-8">
+  <!-- <link rel="shortcut icon" href="../static/img/favicon.ico"> -->
+  <link rel="stylesheet" href="indexb4f2.css?v=b6da8fdc">
+  <script type="text/javascript" src="../static/vendor/vue/vue.js"></script>
+</head>
+
+<body>
+  <div class="wrapper" id="pageContainer">
+    <div class="panel-body mod-code">
+      <div class="p-container">
+        <h2>FH应用市场</h2>
+        <div class="group">
+          <ul class="section-container">
+            <li class="item current" v-for="tool in Object.keys(allTools)">
+              <div class="icon active-icon">{{allTools[tool].icon}}</div>
+              <div class="title">{{allTools[tool].name}}</div>
+              <pre class="desc">{{allTools[tool].tips}}</pre>
+              <div class="btn-wrap"><a class="text-link" :href="`../${tool}/index.html`"
+                  @click="preClick(tool,$event)">马上使用&gt;&gt;</a></div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript" src="fh-confige570.js?v=0b36f6e5"></script>
+  <script type="text/javascript" src="index18d1.js?v=9e1ed2a4"></script>
+  <div id="pageFooter" class="hide" style="display: none">
+  </div>
+</body>
+
+</html>
