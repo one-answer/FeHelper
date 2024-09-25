@@ -18,6 +18,8 @@ window.FileTpl = {
 	<title>#toolName#</title>
 	<link rel="stylesheet" type="text/css" href="index.css">
 </head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3811349067654166"
+     crossorigin="anonymous"></script>
 <body>
 	#toolName#
 	<script type="text/javascript" src="index.js"></script>
