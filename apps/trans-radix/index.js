@@ -1,8 +1,5 @@
-/**
- * FeHelper 进制转换工具
- */
 new Vue({
-    el: '#pageContainer',
+    el: "#pageContainer",
     data: {
         fromArray: [2, 4, 8, 10, 16],
         fromSelected: 10,
@@ -11,28 +8,20 @@ new Vue({
         srcValue: 100,
         rstValue: 0
     },
-
-    mounted: function () {
-        // 进制转换的初始化
-        this.radixConvert();
+    mounted: function() {
+        this.radixConvert()
     },
-
     methods: {
-        getId: (type, id) => [type, id].join('_'),
-
-        radixRadioClicked: function (type, n) {
-            if (type === 1) {
-                this.fromSelected = n;
-            } else {
-                this.toSelected = n;
-            }
-            this.radixConvert();
+        getId: (e, t) => [e, t].join("_"),
+        radixRadioClicked: function(e, t) {
+            1 === e ? this.fromSelected = t : this.toSelected = t,
+            this.radixConvert()
         },
-
-        radixConvert: function () {
-            this.$nextTick(() => {
-                this.rstValue = parseInt(this.srcValue, this.fromSelected).toString(this.toSelected);
-            });
+        radixConvert: function() {
+            this.$nextTick( () => {
+                this.rstValue = parseInt(this.srcValue, this.fromSelected).toString(this.toSelected)
+            }
+            )
         }
     }
 });

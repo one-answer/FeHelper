@@ -1,250 +1,191 @@
-/**
- * FeHelper QR Code Tools
- */
 new Vue({
-    el: '#pageContainer',
+    el: "#pageContainer",
     data: {
-        textContent: '',
+        textContent: "",
         qrSize: 200,
-        qrColor: '#000000',
-        useIcon: 'no',
-        previewSrc: '',
-        resultContent: '',
-        qrEncodeMode: true,
-        showResult: false
+        qrColor: "#000000",
+        useIcon: "no",
+        previewSrc: "",
+        resultContent: "",
+        qrEncodeMode: !0,
+        showResult: !1
     },
-    mounted: function () {
-
-        let mode = new URL(location.href).searchParams.get('mode');
-        this.qrEncodeMode = mode !== 'decode';
-
-        // 在tab创建或者更新时候，监听事件，看看是否有参数传递过来
-        if (location.protocol === 'chrome-extension:') {
-            chrome.tabs.query({currentWindow: true,active: true, }, (tabs) => {
-                let activeTab = tabs.filter(tab => tab.active)[0];
-                chrome.runtime.sendMessage({
-                    type: 'fh-dynamic-any-thing',
-                    thing: 'request-page-content',
-                    tabId: activeTab.id
-                }).then(resp => {
-                    if(!resp) return ;
-                    let text = resp.content || (resp.tab ? (resp.tab.fromTab ? resp.tab.fromTab.url : '') : '');
-                    if (text) {
-                        if (!this.qrEncodeMode) {
-                            // 解码模式
-                            this._qrDecode(text);
-                        } else {
-                            this.textContent = text;
-                            this.convert();
-                        }
-                    }
-                });
-            });
-        }
-
-        this.$refs.codeSource && this.$refs.codeSource.focus();
-
-        // 拖拽注册
-        document.addEventListener('drop', (evt) => {
-            evt.preventDefault();
-            evt.stopPropagation();
-            let files = evt.dataTransfer.files;
-            if (files.length) {
-                if (this.qrEncodeMode) {
-                    this._drawIcon(files[0]);
-                } else {
-                    this._decodeLocal(files[0]);
-                }
+    mounted: function() {
+        let e = new URL(location.href).searchParams.get("mode");
+        this.qrEncodeMode = "decode" !== e,
+        "chrome-extension:" === location.protocol && chrome.runtime.onMessage.addListener( (e, t, o) => {
+            if ("TAB_CREATED_OR_UPDATED" === e.type && e.event === location.pathname.split("/")[1]) {
+                let t = e.content || (e.fromTab ? e.fromTab.url : "");
+                return t && (this.qrEncodeMode ? (this.textContent = t,
+                this.convert()) : this._qrDecode(t)),
+                o && o(),
+                !0
             }
-        }, false);
-
-        document.addEventListener('dragover', (e) => {
-            e.preventDefault();
+        }
+        ),
+        this.$refs.codeSource && this.$refs.codeSource.focus(),
+        document.addEventListener("drop", e => {
+            e.preventDefault(),
             e.stopPropagation();
-        }, false);
-
-
-        //监听paste事件
-        document.addEventListener('paste', (event) => {
-            if (this.qrEncodeMode) return;
-            this.paste(event);
-        }, false);
-
-        // color picker绑定
+            let t = e.dataTransfer.files;
+            t.length && (this.qrEncodeMode ? this._drawIcon(t[0]) : this._decodeLocal(t[0]))
+        }
+        , !1),
+        document.addEventListener("dragover", e => {
+            e.preventDefault(),
+            e.stopPropagation()
+        }
+        , !1),
+        document.addEventListener("paste", e => {
+            this.qrEncodeMode || this.paste(e)
+        }
+        , !1),
         $("#opt_fc").colorpicker({
-            fillcolor: true,
-            success: (obj, color) => {
-                this.qrColor = color;
-                this.convert();
+            fillcolor: !0,
+            success: (e, t) => {
+                this.qrColor = t,
+                this.convert()
             }
         })
     },
-
     methods: {
-        convert: function () {
-            this.showResult = true;
-            this.$nextTick(() => {
-                if (this.textContent) {
-                    $('#preview').html('').qrcode(this._createOptions());
-                } else {
-                    $('#preview').html('再在输入框里输入一些内容，就能生成二维码了哦~')
-                }
-            });
-        },
-
-        fileChanged: function (event) {
-            if (event.target.files.length) {
-                if (this.qrEncodeMode) {
-                    this._drawIcon(event.target.files[0]);
-                } else {
-                    this._decodeLocal(event.target.files[0]);
-                }
-                event.target.value = '';
+        convert: function() {
+            this.showResult = !0,
+            this.$nextTick( () => {
+                this.textContent ? $("#preview").html("").qrcode(this._createOptions()) : $("#preview").html("再在输入框里输入一些内容，就能生成二维码了哦~")
             }
+            )
         },
-
-        _drawIcon: function (file) {
-            if (/image\//.test(file.type)) {
-                this.useIcon = 'custom';
-                let reader = new FileReader();
-                reader.onload = (evt) => {
-                    this.$refs.logoCustom.src = evt.target.result;
-                    this.convert();
-                };
-                reader.readAsDataURL(file);
-            } else {
-                alert('请选择图片文件！');
-            }
+        fileChanged: function(e) {
+            e.target.files.length && (this.qrEncodeMode ? this._drawIcon(e.target.files[0]) : this._decodeLocal(e.target.files[0]),
+            e.target.value = "")
         },
-
-        _createOptions: function () {
-            let defaultOptions = {
-                render: 'canvas',
+        _drawIcon: function(e) {
+            if (/image\//.test(e.type)) {
+                this.useIcon = "custom";
+                let t = new FileReader;
+                t.onload = (e => {
+                    this.$refs.logoCustom.src = e.target.result,
+                    this.convert()
+                }
+                ),
+                t.readAsDataURL(e)
+            } else
+                alert("请选择图片文件！")
+        },
+        _createOptions: function() {
+            let e = {
+                render: "canvas",
                 minVersion: 1,
                 maxVersion: 40,
-                ecLevel: 'L',
+                ecLevel: "L",
                 left: 0,
                 top: 0,
                 size: +this.qrSize || 200,
                 fill: this.qrColor,
-                background: '#fff',
+                background: "#fff",
                 radius: 0,
                 quiet: 0,
                 text: this.textContent,
                 mode: 0,
-                mSize: 0.15,
-                mPosX: 0.5,
-                mPosY: 0.5,
-                label: 'FH',
-                fontname: 'sans',
-                fontcolor: '#f00',
-                image: false
+                mSize: .15,
+                mPosX: .5,
+                mPosY: .5,
+                label: "FH",
+                fontname: "sans",
+                fontcolor: "#f00",
+                image: !1
             };
-
-            // 判断是否需要设置icon
             switch (this.useIcon) {
-                case 'default':
-                    defaultOptions.mode = 4;
-                    defaultOptions.image = this.$refs.logoDefault;
-                    break;
-                case 'custom':
-                    defaultOptions.mode = 4;
-                    defaultOptions.image = this.$refs.logoCustom;
-                    break;
+            case "default":
+                e.mode = 4,
+                e.image = this.$refs.logoDefault;
+                break;
+            case "custom":
+                e.mode = 4,
+                e.image = this.$refs.logoCustom
             }
-
-            return defaultOptions;
+            return e
         },
-
-        trans: function () {
-            this.qrEncodeMode = !this.qrEncodeMode;
+        trans: function() {
+            this.qrEncodeMode = !this.qrEncodeMode
         },
-        select: function () {
-            this.$refs.resultBox.select();
+        select: function() {
+            this.$refs.resultBox.select()
         },
-
-        _decodeLocal: function (file) {
-            let reader = new FileReader();
-            reader.onload = (e) => {
-                this._qrDecode(e.target.result);
-            };
-            reader.readAsDataURL(file);
+        _decodeLocal: function(e) {
+            let t = new FileReader;
+            t.onload = (e => {
+                this._qrDecode(e.target.result)
+            }
+            ),
+            t.readAsDataURL(e)
         },
-
-        paste: function (event) {
-            let items = event.clipboardData.items || {};
-
-            // 优先处理图片
-            for (let index in items) {
-                let item = items[index];
-                if (/image\//.test(item.type)) {
-                    let file = item.getAsFile();
-                    return this._decodeLocal(file);
+        paste: function(e) {
+            let t = e.clipboardData.items || {};
+            for (let e in t) {
+                let o = t[e];
+                if (/image\//.test(o.type)) {
+                    let e = o.getAsFile();
+                    return this._decodeLocal(e)
                 }
             }
-
-            // 然后处理url
             try {
-                // 逐个遍历
                 (async () => {
-                    for (let index in items) {
-                        let item = items[index];
-                        if (/text\/plain/.test(item.type)) {
-                            let url = await new Promise(resolve => {
-                                item.getAsString(url => resolve(url))
-                            });
-                            let flag = await new Promise(resolve => {
-                                this._qrDecode(url, flag => resolve(flag));
-                            });
-                            if (flag) break;
+                    for (let e in t) {
+                        let o = t[e];
+                        if (/text\/plain/.test(o.type)) {
+                            let e = await new Promise(e => {
+                                o.getAsString(t => e(t))
+                            }
+                            );
+                            if (await new Promise(t => {
+                                this._qrDecode(e, e => t(e))
+                            }
+                            ))
+                                break
                         }
                     }
-                })();
-            } catch (ex) {
-                // 只能处理一个了
-                for (let index in items) {
-                    let item = items[index];
-                    if (/text\/plain/.test(item.type)) {
-                        return item.getAsString(url => {
-                            this._qrDecode(url);
-                        });
-                    }
+                }
+                )()
+            } catch (e) {
+                for (let e in t) {
+                    let o = t[e];
+                    if (/text\/plain/.test(o.type))
+                        return o.getAsString(e => {
+                            this._qrDecode(e)
+                        }
+                        )
                 }
             }
         },
-
-        /**
-         * 二维码转码
-         * @param imgSrc
-         * @param callback
-         */
-        _qrDecode: function (imgSrc, callback) {
-
-            let self = this;
-            const codeReader = new ZXing.BrowserMultiFormatReader();
-
-            let image = new Image();
-            image.src = imgSrc;
-            image.setAttribute('crossOrigin', 'Anonymous');
-            image.onload = function () {
-                codeReader.decodeFromImage(this).then((result) => {
-                    self._showDecodeResult(imgSrc, result.text);
-                    callback && callback(result.text);
-                }).catch((err) => {
-                    self._showDecodeResult(imgSrc, err);
-                    callback && callback(err);
-                });
-            };
-            image.onerror = function (e) {
-                callback && callback(false);
-                alert('抱歉，当前图片无法被解码，请保存图片再拖拽进来试试！')
-            };
+        _qrDecode: function(e, t) {
+            let o = this;
+            const n = new ZXing.BrowserMultiFormatReader;
+            let s = new Image;
+            s.src = e,
+            s.setAttribute("crossOrigin", "Anonymous"),
+            s.onload = function() {
+                n.decodeFromImage(this).then(n => {
+                    o._showDecodeResult(e, n.text),
+                    t && t(n.text)
+                }
+                ).catch(n => {
+                    o._showDecodeResult(e, n),
+                    t && t(n)
+                }
+                )
+            }
+            ,
+            s.onerror = function(e) {
+                t && t(!1),
+                alert("抱歉，当前图片无法被解码，请保存图片再拖拽进来试试！")
+            }
         },
-
-        _showDecodeResult: function (src, txt) {
-            this.previewSrc = src;
-            this.$refs.panelBox.style.backgroundImage = 'none';
-            this.resultContent = txt;
+        _showDecodeResult: function(e, t) {
+            this.previewSrc = e,
+            this.$refs.panelBox.style.backgroundImage = "none",
+            this.resultContent = t
         }
     }
 });

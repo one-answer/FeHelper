@@ -1,216 +1,167 @@
-/**
- * FeHelper Image Base64 Tools
- */
 new Vue({
-    el: '#pageContainer',
+    el: "#pageContainer",
     data: {
-        sizeOri: '暂无数据',
-        sizeBase: '暂无数据',
-        previewSrc: '',
-        resultContent: '',
-        toolName: {'image': '图片转Base64', 'base64': 'Base64转图片'},
-        curType: 'image',
-        nextType: 'base64',
-        txtBase64Input: '',
-        txtBase64Output: '',
-        error:''
+        sizeOri: "暂无数据",
+        sizeBase: "暂无数据",
+        previewSrc: "",
+        resultContent: "",
+        toolName: {
+            image: "图片转Base64",
+            base64: "Base64转图片"
+        },
+        curType: "image",
+        nextType: "base64",
+        txtBase64Input: "",
+        txtBase64Output: "",
+        error: ""
     },
-
     watch: {
-        txtBase64Input:{
-            immediate: true,
-            handler(newVal, oldVal) {
-                this.error = ''
-                this.txtBase64Output = ''
-                if(newVal.length === 0) return
-                if(newVal.indexOf("data:") === -1) {
-                    this.txtBase64Output = "data:image/jpeg;base64,"+newVal
-                } else {
-                    this.txtBase64Output = newVal
-                }
-            },
+        txtBase64Input: {
+            immediate: !0,
+            handler(t, e) {
+                this.error = "",
+                this.txtBase64Output = "",
+                0 !== t.length && (-1 === t.indexOf("data:") ? this.txtBase64Output = "data:image/jpeg;base64," + t : this.txtBase64Output = t)
+            }
         }
     },
-
-    mounted: function () {
-
-        // 在tab创建或者更新时候，监听事件，看看是否有参数传递过来
-        if (location.protocol === 'chrome-extension:') {
-            chrome.tabs.query({currentWindow: true,active: true, }, (tabs) => {
-                let activeTab = tabs.filter(tab => tab.active)[0];
-                chrome.runtime.sendMessage({
-                    type: 'fh-dynamic-any-thing',
-                    thing: 'request-page-content',
-                    tabId: activeTab.id
-                }).then(resp => {
-                    if(!resp || !resp.content) return ;
-                    if (this.curType !== 'image') {
-                        this.trans();
-                    }
-                    this.convertOnline(resp.content, flag => {
-                        if (!flag) {
-                            alert('抱歉，' + resp.content + ' 对应的图片未转码成功！');
-                        }
-                    });
-                });
-            });
-        }
-
-        //监听paste事件
-        document.addEventListener('paste', (event) => {
-            if (this.curType !== 'image') return;
-            this.paste(event);
-        }, false);
-
-        // 监听拖拽
-        document.addEventListener('drop', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            if (this.curType !== 'image') return;
-            let files = event.dataTransfer.files;
-            if (files.length) {
-                if (/image\//.test(files[0].type)) {
-                    this._getDataUri(files[0]);
-                } else {
-                    alert('请选择图片文件！');
+    mounted: function() {
+        "chrome-extension:" === location.protocol && chrome.runtime.onMessage.addListener( (t, e, i) => {
+            if ("TAB_CREATED_OR_UPDATED" === t.type && t.content && t.event === location.pathname.split("/")[1])
+                return "image" !== this.curType && this.trans(),
+                this.convertOnline(t.content, e => {
+                    e || alert("抱歉，" + t.content + " 对应的图片未转码成功！")
                 }
-            }
-        }, false);
-
-        document.addEventListener('dragover', (event) => {
-            if (this.curType !== 'image') return;
-            event.preventDefault();
-            event.stopPropagation();
-        }, false);
+                ),
+                i && i(),
+                !0
+        }
+        ),
+        document.addEventListener("paste", t => {
+            "image" === this.curType && this.paste(t)
+        }
+        , !1),
+        document.addEventListener("drop", t => {
+            if (t.preventDefault(),
+            t.stopPropagation(),
+            "image" !== this.curType)
+                return;
+            let e = t.dataTransfer.files;
+            e.length && (/image\//.test(e[0].type) ? this._getDataUri(e[0]) : alert("请选择图片文件！"))
+        }
+        , !1),
+        document.addEventListener("dragover", t => {
+            "image" === this.curType && (t.preventDefault(),
+            t.stopPropagation())
+        }
+        , !1)
     },
     methods: {
-
-        _sizeFormat: function (num) {
-            if (isNaN(num)) {
-                return '暂无数据';
+        _sizeFormat: function(t) {
+            return isNaN(t) ? "暂无数据" : (t = +t) < 1024 ? t + " B" : t < 1048576 ? (t / 1024).toFixed(2) + " KB" : (t / 1024 / 1024).toFixed(2) + " MB"
+        },
+        _getDataUri: function(t) {
+            let e = new FileReader;
+            e.onload = (e => {
+                this.resultContent = e.target.result,
+                this.previewSrc = e.target.result,
+                this.$refs.panelBox.style.backgroundImage = "none",
+                this.sizeOri = this._sizeFormat(t.size),
+                this.sizeBase = this._sizeFormat(e.target.result.length)
             }
-            num = +num;
-            if (num < 1024) {
-                return num + ' B';
-            } else if (num < 1024 * 1024) {
-                return (num / 1024).toFixed(2) + ' KB';
-            } else {
-                return (num / 1024 / 1024).toFixed(2) + ' MB';
+            ),
+            e.readAsDataURL(t)
+        },
+        convertOnline: function(t, e) {
+            let i = this;
+            i.previewSrc = t;
+            let a = new Image;
+            a.src = t,
+            a.onload = function() {
+                let t = this.naturalWidth
+                  , n = this.naturalHeight;
+                !function(a, s, r, o, l) {
+                    let u = document.createElement("canvas");
+                    u.setAttribute("id", "qr-canvas"),
+                    u.height = l + 100,
+                    u.width = o + 100;
+                    let h = u.getContext("2d");
+                    h.fillStyle = "rgb(255,255,255)",
+                    h.fillRect(0, 0, u.width, u.height),
+                    h.drawImage(a, r, s, o, l, 50, 50, o, l),
+                    i.resultContent = u.toDataURL(),
+                    i.$refs.panelBox.style.backgroundImage = "none",
+                    i.sizeOri = t + "x" + n,
+                    i.sizeBase = i._sizeFormat(i.resultContent.length),
+                    e && e(!0)
+                }(a, 0, 0, t, n)
             }
-        },
-
-        _getDataUri: function (file) {
-            let reader = new FileReader();
-            reader.onload = (evt) => {
-                this.resultContent = evt.target.result;
-                this.previewSrc = evt.target.result;
-                this.$refs.panelBox.style.backgroundImage = 'none';
-                this.sizeOri = this._sizeFormat(file.size);
-                this.sizeBase = this._sizeFormat(evt.target.result.length);
-            };
-            reader.readAsDataURL(file);
-        },
-
-        convertOnline: function (onlineSrc, callback) {
-            let that = this;
-            that.previewSrc = onlineSrc;
-            let image = new Image();
-            image.src = onlineSrc;
-            image.onload = function () {
-                let width = this.naturalWidth;
-                let height = this.naturalHeight;
-
-                // url方式解码失败，再转换成data uri后继续解码
-                (function createCanvasContext(img, t, l, w, h) {
-                    let canvas = document.createElement('canvas');
-                    canvas.setAttribute('id', 'qr-canvas');
-                    canvas.height = h + 100;
-                    canvas.width = w + 100;
-                    let context = canvas.getContext('2d');
-                    context.fillStyle = 'rgb(255,255,255)';
-                    context.fillRect(0, 0, canvas.width, canvas.height);
-                    context.drawImage(img, l, t, w, h, 50, 50, w, h);
-
-                    that.resultContent = canvas.toDataURL();
-                    that.$refs.panelBox.style.backgroundImage = 'none';
-                    that.sizeOri = width + 'x' + height;
-                    that.sizeBase = that._sizeFormat(that.resultContent.length);
-
-                    callback && callback(true);
-                })(image, 0, 0, width, height);
-            };
-            image.onerror = function () {
-                callback && callback(false);
-            };
-        },
-
-        convert: function () {
-            if (this.$refs.fileBox.files.length) {
-                this._getDataUri(this.$refs.fileBox.files[0]);
-                this.$refs.fileBox.value = '';
+            ,
+            a.onerror = function() {
+                e && e(!1)
             }
         },
-
-        select: function () {
-            this.$refs.resultBox.select();
+        convert: function() {
+            this.$refs.fileBox.files.length && (this._getDataUri(this.$refs.fileBox.files[0]),
+            this.$refs.fileBox.value = "")
         },
-
-        upload: function (evt) {
-            evt.preventDefault();
-            this.$refs.fileBox.click();
+        select: function() {
+            this.$refs.resultBox.select()
         },
-
-        paste: function (event) {
-            let items = event.clipboardData.items || {};
-
-            // 优先处理图片
-            for (let index in items) {
-                let item = items[index];
-                if (/image\//.test(item.type)) {
-                    let file = item.getAsFile();
-                    return this._getDataUri(file);
+        upload: function(t) {
+            t.preventDefault(),
+            this.$refs.fileBox.click()
+        },
+        paste: function(t) {
+            let e = t.clipboardData.items || {};
+            for (let t in e) {
+                let i = e[t];
+                if (/image\//.test(i.type)) {
+                    let t = i.getAsFile();
+                    return this._getDataUri(t)
                 }
             }
-
-            // 然后处理url
             try {
-                // 逐个遍历
                 (async () => {
-                    for (let index in items) {
-                        let item = items[index];
-                        if (/text\/plain/.test(item.type)) {
-                            let url = await new Promise(resolve => {
-                                item.getAsString(url => resolve(url))
-                            });
-                            let flag = await new Promise(resolve => {
-                                this.convertOnline(url, flag => resolve(flag));
-                            });
-                            if (flag) break;
+                    for (let t in e) {
+                        let i = e[t];
+                        if (/text\/plain/.test(i.type)) {
+                            let t = await new Promise(t => {
+                                i.getAsString(e => t(e))
+                            }
+                            );
+                            if (await new Promise(e => {
+                                this.convertOnline(t, t => e(t))
+                            }
+                            ))
+                                break
                         }
                     }
-                })();
-            } catch (ex) {
-                // 只能处理一个了
-                for (let index in items) {
-                    let item = items[index];
-                    if (/text\/plain/.test(item.type)) {
-                        return item.getAsString(url => {
-                            this.convertOnline(url);
-                        });
-                    }
+                }
+                )()
+            } catch (t) {
+                for (let t in e) {
+                    let i = e[t];
+                    if (/text\/plain/.test(i.type))
+                        return i.getAsString(t => {
+                            this.convertOnline(t)
+                        }
+                        )
                 }
             }
         },
-
-        trans: function () {
-            this.curType = {image: 'base64', base64: 'image'}[this.curType];
-            this.nextType = {image: 'base64', base64: 'image'}[this.nextType];
+        trans: function() {
+            this.curType = {
+                image: "base64",
+                base64: "image"
+            }[this.curType],
+            this.nextType = {
+                image: "base64",
+                base64: "image"
+            }[this.nextType]
         },
-
-        loadError: function (e) {
-            if (this.curType === 'base64' && this.txtBase64Input.trim().length) {
-                this.error = ('无法识别的Base64编码，请确认是正确的图片Data URI？');
-            }
+        loadError: function(t) {
+            "base64" === this.curType && this.txtBase64Input.trim().length && (this.error = "无法识别的Base64编码，请确认是正确的图片Data URI？")
         }
     }
 });

@@ -1,74 +1,78 @@
 <!DOCTYPE HTML>
 <html lang="zh-CN">
+
 <head>
     <title>Markdown编辑器（支持HTML转Markdown）</title>
     <meta charset="UTF-8">
-  <!-- <link rel="shortcut icon" href="../static/img/favicon.ico"> -->
+    <!-- <link rel="shortcut icon" href="../static/img/favicon.ico"> -->
     <link rel="stylesheet" href="index.css" />
     <script type="text/javascript" src="../static/vendor/evalCore.min.js"></script>
     <script type="text/javascript" src="../static/vendor/vue/vue.js"></script>
 </head>
+
 <body>
 
-<div class="wrapper" id="pageContainer">
-    <div class="panel panel-default" style="margin-bottom: 0px;">
-        <div class="panel-heading">
-            <h3 class="panel-title">
-                {{toolName[codeType]}}
-                <span class="x-xdemo" ref="demoLink1" @click="setDemo">{{codeType}}是什么？</span>
-                <span class="x-xdemo" ref="importLink" @click="importContent">导入{{codeType}}文件</span>
+    <div class="wrapper" id="pageContainer">
+        <div class="panel panel-default" style="margin-bottom: 0px;">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    {{toolName[codeType]}}
+                    <span class="x-xdemo" ref="demoLink1" @click="setDemo">{{codeType}}是什么？</span>
+                    <span class="x-xdemo" ref="importLink" @click="importContent">导入{{codeType}}文件</span>
 
-                <span class="x-switch ui-fl-r" ref="btnSwitch" @click="trans">{{toolName[nextCodeType]}}&gt;&gt;</span>
-            </h3>
-        </div>
-    </div>
-    <div class="panel-body mod-markdown" ref="modMarkdownBox">
-
-        <div class="mod-toolbar">
-            <div class="editor-toolbar">
-                <a class="icon-bold" @click="insert('b')" title="加粗"></a>
-                <a class="icon-italic" @click="insert('i')" title="斜体"></a>
-                <i class="separator">|</i>
-                <a class="icon-quote" @click="insert('quote')" title="备注"></a>
-                <a class="icon-code" @click="insert('code')" title="代码"></a>
-                <i class="separator">|</i>
-                <a class="icon-unordered-list" @click="insert('unordered-list')" title="无序列表"></a>
-                <a class="icon-ordered-list" @click="insert('ordered-list')" title="有序列表"></a>
-                <i class="separator">|</i>
-                <a class="icon-link" @click="insert('link')" title="链接"></a>
-                <a class="icon-image" @click="insert('image')" title="图片"></a>
-                <i class="separator">|</i>
-                <a class="icon-preview" @click="togglePreview" title="实时预览切换"></a>
-                <a class="icon-save" @click="saveMarkdown('md')" title="下载Markdown内容"></a>
-                <a class="icon-pdf" @click="saveMarkdown('html')" title="下载HTML内容"></a>
-
-                <div class="x-mask"></div>
+                    <span class="x-switch ui-fl-r" ref="btnSwitch"
+                        @click="trans">{{toolName[nextCodeType]}}&gt;&gt;</span>
+                </h3>
             </div>
         </div>
-        <div class="mod-editor">
-            <textarea id="editor" ref="elEditor"></textarea>
+        <div class="panel-body mod-markdown" ref="modMarkdownBox">
+
+            <div class="mod-toolbar">
+                <div class="editor-toolbar">
+                    <a class="icon-bold" @click="insert('b')" title="加粗"></a>
+                    <a class="icon-italic" @click="insert('i')" title="斜体"></a>
+                    <i class="separator">|</i>
+                    <a class="icon-quote" @click="insert('quote')" title="备注"></a>
+                    <a class="icon-code" @click="insert('code')" title="代码"></a>
+                    <i class="separator">|</i>
+                    <a class="icon-unordered-list" @click="insert('unordered-list')" title="无序列表"></a>
+                    <a class="icon-ordered-list" @click="insert('ordered-list')" title="有序列表"></a>
+                    <i class="separator">|</i>
+                    <a class="icon-link" @click="insert('link')" title="链接"></a>
+                    <a class="icon-image" @click="insert('image')" title="图片"></a>
+                    <i class="separator">|</i>
+                    <a class="icon-preview" @click="togglePreview" title="实时预览切换"></a>
+                    <a class="icon-save" @click="saveMarkdown('md')" title="下载Markdown内容"></a>
+                    <a class="icon-pdf" @click="saveMarkdown('html')" title="下载HTML内容"></a>
+
+                    <div class="x-mask"></div>
+                </div>
+            </div>
+            <div class="mod-editor">
+                <textarea id="editor" ref="elEditor"></textarea>
+            </div>
+            <div class="markdown-body" ref="boxPreview"></div>
         </div>
-        <div class="markdown-body" ref="boxPreview"></div>
+
     </div>
 
-</div>
-
-<script type="text/javascript" src="../static/vendor/codemirror/codemirror.js"></script>
-<script type="text/javascript" src="../static/vendor/codemirror/overlay.js"></script>
-<script type="text/javascript" src="../static/vendor/codemirror/markdown.js"></script>
-<script type="text/javascript" src="../static/vendor/codemirror/gfm.js"></script>
-<script type="text/javascript" src="../static/vendor/codemirror/xml.js"></script>
-<script type="text/javascript" src="../static/vendor/codemirror/javascript.js"></script>
-<script type="text/javascript" src="../static/vendor/codemirror/css.js"></script>
-<script type="text/javascript" src="../static/vendor/codemirror/htmlmixed.js"></script>
-<script type="text/javascript" src="../static/vendor/codemirror/clike.js"></script>
-<script type="text/javascript" src="../static/vendor/codemirror/meta.js"></script>
-<script type="text/javascript" src="../static/vendor/h2m/h2m.js"></script>
-<script type="text/javascript" src="../static/vendor/highlight/highlight.js"></script>
-<script type="text/javascript" src="libs/marked.js"></script>
-<script type="text/javascript" src="libs/rawdeflate.js"></script>
-<script type="text/javascript" src="libs/rawinflate.js"></script>
-<script type="text/javascript" src="demo-tpl.js"></script>
-<script type="text/javascript" src="index.js"></script>
+    <script type="text/javascript" src="../static/vendor/codemirror/codemirror.js?v=65f3b1ba"></script>
+    <script type="text/javascript" src="../static/vendor/codemirror/overlay.js?v=0e0cda26"></script>
+    <script type="text/javascript" src="../static/vendor/codemirror/markdown.js?v=0b64a9ae"></script>
+    <script type="text/javascript" src="../static/vendor/codemirror/gfm.js?v=e8dceccc"></script>
+    <script type="text/javascript" src="../static/vendor/codemirror/xml.js?v=1e50d09c"></script>
+    <script type="text/javascript" src="../static/vendor/codemirror/javascript.js?v=a83906b6"></script>
+    <script type="text/javascript" src="../static/vendor/codemirror/css.js?v=a4918d97"></script>
+    <script type="text/javascript" src="../static/vendor/codemirror/htmlmixed.js?v=e45624ee"></script>
+    <script type="text/javascript" src="../static/vendor/codemirror/clike.js?v=963e2377"></script>
+    <script type="text/javascript" src="../static/vendor/codemirror/meta.js?v=f5333894"></script>
+    <script type="text/javascript" src="../static/vendor/h2m/h2m.js?v=49235721"></script>
+    <script type="text/javascript" src="../static/vendor/highlight/highlight.js?v=cb544f77"></script>
+    <script type="text/javascript" src="libs/marked.js?v=29aba6f8"></script>
+    <script type="text/javascript" src="libs/rawdeflate.js?v=6010a863"></script>
+    <script type="text/javascript" src="libs/rawinflate.js?v=67cf46e4"></script>
+    <script type="text/javascript" src="demo-tpl.js?v=24c44e4f"></script>
+    <script type="text/javascript" src="index.js?v=7e5a1316"></script>
 </body>
+
 </html>

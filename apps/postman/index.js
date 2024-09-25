@@ -1,283 +1,202 @@
-/**
- * FeHelper 简易版Postman
- */
-
-const JSON_SORT_TYPE_KEY = 'json_sort_type_key';
+const JSON_SORT_TYPE_KEY = "json_sort_type_key";
 new Vue({
-    el: '#pageContainer',
+    el: "#pageContainer",
     data: {
-        urlContent: '',
-        methodContent: 'GET',
-        resultContent: '',
-        funcName: '',
-        paramContent: '',
+        urlContent: "",
+        methodContent: "GET",
+        resultContent: "",
+        funcName: "",
+        paramContent: "",
         responseHeaders: [],
-        jfCallbackName_start: '',
-        jfCallbackName_end: '',
-        errorMsgForJson: '',
-        originalJsonStr: '',
-        headerList: [new Date() * 1],
+        jfCallbackName_start: "",
+        jfCallbackName_end: "",
+        errorMsgForJson: "",
+        originalJsonStr: "",
+        headerList: [1 * new Date],
         urlencodedDefault: 1,
         urlParams: [],
-        paramMode:'kv' // kv、json
+        paramMode: "kv"
     },
-
     watch: {
-        urlContent: function (val) {
-            let url = val;
-            let reg = /[?&]([^?&#]+)=([^?&#]*)/g;
-            let params = [];
-            let ret = reg.exec(url);
-            while (ret) {
-                params.push({
-                    key: ret[1],
-                    value: ret[2],
-                });
-                ret = reg.exec(url);
-            }
-            const originStr = this.urlParams2String(params);
-            const newStr = this.urlParams2String(this.urlParams);
-            if (originStr !== newStr) {
-                this.urlParams = params;
-            }
+        urlContent: function(t) {
+            let e = t
+              , r = /[?&]([^?&#]+)=([^?&#]*)/g
+              , a = []
+              , s = r.exec(e);
+            for (; s; )
+                a.push({
+                    key: s[1],
+                    value: s[2]
+                }),
+                s = r.exec(e);
+            this.urlParams2String(a) !== this.urlParams2String(this.urlParams) && (this.urlParams = a)
         },
         urlParams: {
-            handler(val) {
-              this.urlContent =
-                this.urlContent.substr(0, this.urlContent.indexOf("?") + 1) +
-                val.map((item) => `${item.key}=${item.value}`).join("&");
+            handler(t) {
+                this.urlContent = this.urlContent.substr(0, this.urlContent.indexOf("?") + 1) + t.map(t => `${t.key}=${t.value}`).join("&")
             },
-            deep: true,
-        },
+            deep: !0
+        }
     },
-
-    mounted: function () {
-        this.$refs.url.focus();
+    mounted: function() {
+        this.$refs.url.focus()
     },
     methods: {
-        postman: function () {
-            this.$nextTick(() => {
-                this.sendRequest(this.urlContent, this.methodContent, this.paramContent);
-            });
-        },
-
-        sendRequest: function (url, method, body) {
-            let xhr = new XMLHttpRequest();
-            xhr.addEventListener("readystatechange", (resp) => {
-                let result = 'Loading...';
-                switch (resp.target.readyState) {
-                    case resp.target.OPENED:
-                        result = 'Senting...';
-                        break;
-                    case resp.target.HEADERS_RECEIVED:
-                        result = 'Headers received';
-                        this.responseHeaders = resp.target.getAllResponseHeaders().trim().split('\n').map(item => {
-                            return item.split(': ').map(x => x.trim())
-                        });
-                        break;
-                    case resp.target.LOADING:
-                        result = 'Loading...';
-                        break;
-                    case resp.target.DONE:
-                        try {
-                            result = JSON.stringify(JSON.parse(resp.target.responseText), null, 4);
-                        } catch (e) {
-                            result = resp.target.responseText;
-                        }
-
-                        this.jsonFormat(result);
-                        this.renderTab();
-                        break;
-                }
-                this.resultContent = result || '无数据';
-            });
-            xhr.open(method, url);
-
-            let isPost = false;
-            if (method.toLowerCase() === 'post') {
-                isPost = true;
-                this.urlencodedDefault && xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        postman: function() {
+            this.$nextTick( () => {
+                this.sendRequest(this.urlContent, this.methodContent, this.paramContent)
             }
-
-            // 设置请求头：Header
-            this.headerList.forEach(id => {
-                let headerKey = $(`#header_key_${id}`).val();
-                let headerVal = $(`#header_value_${id}`).val();
-                if (headerKey && headerVal) {
-                    xhr.setRequestHeader(headerKey, headerVal);
-                }
-            });
-
-            // 如果body是json格式的，需要转换成k-v格式
-            try {
-                let obj = JSON.parse(body);
-                body = Object.keys(obj).map(k => {
-                    let v = JSON.stringify(obj[k]).replace(/"/g,'');
-                    return `${k}=${v}`;
-                }).join('&');
-            } catch (e) {
-            }
-
-            xhr.send(isPost && body);
+            )
         },
-
-        addHeader() {
-            this.headerList.push(new Date() * 1);
-        },
-        deleteHeader(event) {
-            event.target.parentNode.remove();
-        },
-        transParamMode(){
-            if(this.paramMode === 'kv') {
-                this.paramMode = 'json';
-                let objParam = {};
-                this.paramContent.split('&').forEach(p => {
-                    let x = p.split('=');
-                    objParam[x[0]] = x[1];
-                });
-                this.paramContent = JSON.stringify(objParam,null,4);
-            }else{
-                this.paramMode = 'kv';
-                try {
-                    let obj = JSON.parse(this.paramContent);
-                    this.paramContent = Object.keys(obj).map(k => {
-                        let v = JSON.stringify(obj[k]).replace(/"/g,'');
-                        return `${k}=${v}`;
-                    }).join('&');
-                } catch (e) {
-                }
-            }
-        },
-
-        renderTab: function () {
-            jQuery('#tabs').tabs({
-                show: (event, ui) => {
-                }
-            });
-            this.$refs.resultContainer.classList.remove('hide');
-        },
-
-
-        jsonFormat: function (source) {
-            this.errorMsgForJson = '';
-            this.jfCallbackName_start = '';
-            this.jfCallbackName_end = '';
-
-            if (!source) {
-                return false;
-            }
-
-            // json对象
-            let jsonObj = null;
-
-            // 下面校验给定字符串是否为一个合法的json
-            try {
-                this.funcName = '';
-
-                // 再看看是不是jsonp的格式
-                let reg = /^([\w\.]+)\(\s*([\s\S]*)\s*\)$/igm;
-                let matches = reg.exec(source);
-                if (matches != null) {
-                    this.funcName = matches[1];
-                    source = matches[2];
-                }
-                // 这里可能会throw exception
-                jsonObj = JSON.parse(source);
-            } catch (ex) {
-                // new Function的方式，能自动给key补全双引号，但是不支持bigint，所以是下下策，放在try-catch里搞
-                try {
-                    jsonObj = new Function("return " + source)();
-                } catch (exx) {
+        sendRequest: function(t, e, r) {
+            let a = new XMLHttpRequest;
+            a.addEventListener("readystatechange", t => {
+                let e = "Loading...";
+                switch (t.target.readyState) {
+                case t.target.OPENED:
+                    e = "Senting...";
+                    break;
+                case t.target.HEADERS_RECEIVED:
+                    e = "Headers received",
+                    this.responseHeaders = t.target.getAllResponseHeaders().trim().split("\n").map(t => t.split(": ").map(t => t.trim()));
+                    break;
+                case t.target.LOADING:
+                    e = "Loading...";
+                    break;
+                case t.target.DONE:
                     try {
-                        // 再给你一次机会，是不是下面这种情况：  "{\"ret\":\"0\", \"msg\":\"ok\"}"
-                        jsonObj = new Function("return '" + source + "'")();
-                        if (typeof jsonObj === 'string') {
-                            // 最后给你一次机会，是个字符串，老夫给你再转一次
-                            jsonObj = new Function("return " + jsonObj)();
-                        }
-                    } catch (exxx) {
-                        this.errorMsgForJson = exxx.message;
+                        e = JSON.stringify(JSON.parse(t.target.responseText), null, 4)
+                    } catch (r) {
+                        e = t.target.responseText
+                    }
+                    this.jsonFormat(e),
+                    this.renderTab()
+                }
+                this.resultContent = e || "无数据"
+            }
+            ),
+            a.open(e, t);
+            let s = !1;
+            "post" === e.toLowerCase() && (s = !0,
+            this.urlencodedDefault && a.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")),
+            this.headerList.forEach(t => {
+                let e = $(`#header_key_${t}`).val()
+                  , r = $(`#header_value_${t}`).val();
+                e && r && a.setRequestHeader(e, r)
+            }
+            );
+            try {
+                let t = JSON.parse(r);
+                r = Object.keys(t).map(e => {
+                    return `${e}=${JSON.stringify(t[e]).replace(/"/g, "")}`
+                }
+                ).join("&")
+            } catch (t) {}
+            a.send(s && r)
+        },
+        addHeader() {
+            this.headerList.push(1 * new Date)
+        },
+        deleteHeader(t) {
+            t.target.parentNode.remove()
+        },
+        transParamMode() {
+            if ("kv" === this.paramMode) {
+                this.paramMode = "json";
+                let t = {};
+                this.paramContent.split("&").forEach(e => {
+                    let r = e.split("=");
+                    t[r[0]] = r[1]
+                }
+                ),
+                this.paramContent = JSON.stringify(t, null, 4)
+            } else {
+                this.paramMode = "kv";
+                try {
+                    let t = JSON.parse(this.paramContent);
+                    this.paramContent = Object.keys(t).map(e => {
+                        return `${e}=${JSON.stringify(t[e]).replace(/"/g, "")}`
+                    }
+                    ).join("&")
+                } catch (t) {}
+            }
+        },
+        renderTab: function() {
+            jQuery("#tabs").tabs({
+                show: (t, e) => {}
+            }),
+            this.$refs.resultContainer.classList.remove("hide")
+        },
+        jsonFormat: function(t) {
+            if (this.errorMsgForJson = "",
+            this.jfCallbackName_start = "",
+            this.jfCallbackName_end = "",
+            !t)
+                return !1;
+            let e = null;
+            try {
+                this.funcName = "";
+                let r = /^([\w\.]+)\(\s*([\s\S]*)\s*\)$/gim.exec(t);
+                null != r && (this.funcName = r[1],
+                t = r[2]),
+                e = JSON.parse(t)
+            } catch (r) {
+                try {
+                    e = new Function("return " + t)()
+                } catch (r) {
+                    try {
+                        "string" == typeof (e = new Function("return '" + t + "'")()) && (e = new Function("return " + e)())
+                    } catch (t) {
+                        this.errorMsgForJson = t.message
                     }
                 }
             }
-
-            // 是json格式，可以进行JSON自动格式化
-            if (jsonObj != null && typeof jsonObj === "object" && !this.errorMsgForJson.length) {
+            if (null != e && "object" == typeof e && !this.errorMsgForJson.length) {
                 try {
-                    // 要尽量保证格式化的东西一定是一个json，所以需要把内容进行JSON.stringify处理
-                    source = JSON.stringify(jsonObj);
-                } catch (ex) {
-                    // 通过JSON反解不出来的，一定有问题
-                    this.errorMsgForJson = ex.message;
+                    t = JSON.stringify(e)
+                } catch (t) {
+                    this.errorMsgForJson = t.message
                 }
-
                 if (!this.errorMsgForJson.length) {
-
-                    this.originalJsonStr = source;
-
-                    // 获取上次记录的排序方式
-                    let curSortType = parseInt(localStorage.getItem(JSON_SORT_TYPE_KEY) || 0);
-                    this.didFormat(curSortType);
-
-                    // 排序选项初始化
-                    $('[name=jsonsort][value=' + curSortType + ']').attr('checked', 1);
-
-                    let that = this;
-                    $('[name=jsonsort]').click(function (e) {
-                        let sortType = parseInt(this.value);
-                        if (sortType !== curSortType) {
-                            that.didFormat(sortType);
-                            curSortType = sortType;
-                        }
-                        localStorage.setItem(JSON_SORT_TYPE_KEY, sortType);
-                    });
+                    this.originalJsonStr = t;
+                    let e = parseInt(localStorage.getItem(JSON_SORT_TYPE_KEY) || 0);
+                    this.didFormat(e),
+                    $("[name=jsonsort][value=" + e + "]").attr("checked", 1);
+                    let r = this;
+                    $("[name=jsonsort]").click(function(t) {
+                        let a = parseInt(this.value);
+                        a !== e && (r.didFormat(a),
+                        e = a),
+                        localStorage.setItem(JSON_SORT_TYPE_KEY, a)
+                    })
                 }
             }
-
-            // 不是json，都格式化不了，一定会出错
             if (this.errorMsgForJson) {
-                let el = document.querySelector('#optionBar');
-                el && (el.style.display = 'none');
-            }
-
-        },
-
-        didFormat: function (sortType) {
-            sortType = sortType || 0;
-            let source = this.originalJsonStr;
-
-            if (sortType !== 0) {
-                let jsonObj = JsonABC.sortObj(JSON.parse(this.originalJsonStr), parseInt(sortType), true);
-                source = JSON.stringify(jsonObj);
-            }
-
-            Formatter.format(source);
-            $('.x-toolbar').fadeIn(500);
-
-            // 如果是JSONP格式的，需要把方法名也显示出来
-            if (this.funcName) {
-                $('#jfCallbackName_start').html(this.funcName + '(');
-                $('#jfCallbackName_end').html(')');
-            } else {
-                this.jfCallbackName_start = '';
-                this.jfCallbackName_end = '';
+                let t = document.querySelector("#optionBar");
+                t && (t.style.display = "none")
             }
         },
-
-        setDemo: function (type) {
-            if (type === 1) {
-                this.urlContent = 'http://t.weather.sojson.com/api/weather/city/101030100';
-                this.methodContent = 'GET';
-            } else {
-                this.urlContent = 'https://www.baidufe.com/test-post.php';
-                this.methodContent = 'POST';
-                this.paramContent = 'username=postman&password=123456'
+        didFormat: function(t) {
+            t = t || 0;
+            let e = this.originalJsonStr;
+            if (0 !== t) {
+                let r = JsonABC.sortObj(JSON.parse(this.originalJsonStr), parseInt(t), !0);
+                e = JSON.stringify(r)
             }
+            Formatter.format(e),
+            $(".x-toolbar").fadeIn(500),
+            this.funcName ? ($("#jfCallbackName_start").html(this.funcName + "("),
+            $("#jfCallbackName_end").html(")")) : (this.jfCallbackName_start = "",
+            this.jfCallbackName_end = "")
         },
-
-        urlParams2String: function (params) {
-            return params.map((param) => `${param.key}=${param.value}`).join("&")
+        setDemo: function(t) {
+            1 === t ? (this.urlContent = "http://t.weather.sojson.com/api/weather/city/101030100",
+            this.methodContent = "GET") : (this.urlContent = "https://www.baidufe.com/test-post.php",
+            this.methodContent = "POST",
+            this.paramContent = "username=postman&password=123456")
+        },
+        urlParams2String: function(t) {
+            return t.map(t => `${t.key}=${t.value}`).join("&")
         }
-
     }
 });

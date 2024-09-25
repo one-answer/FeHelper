@@ -1,61 +1,46 @@
-/**
- * FeHelper 密码随机生成工具
- */
 new Vue({
-    el: '#pageContainer',
+    el: "#pageContainer",
     data: {
-        number: true,
-        lowerLetter: true,
-        upperLetter: true,
-        specialChar: false,
+        number: !0,
+        lowerLetter: !0,
+        upperLetter: !0,
+        specialChar: !1,
         length: 16,
         chars: {
-            number: '0123456789',
-            lowerLetter: 'abcdefghijklmnopqrstuvwxyz',
-            upperLetter: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-            specialChar: '~!@#$%^&*()[{]}-_=+\|;:\'\",<.>/?`'
+            number: "0123456789",
+            lowerLetter: "abcdefghijklmnopqrstuvwxyz",
+            upperLetter: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            specialChar: "~!@#$%^&*()[{]}-_=+|;:'\",<.>/?`"
         },
-        resultContent: ''
+        resultContent: ""
     },
-
     methods: {
-        convert: function () {
-            this.$nextTick(() => {
-                let exceptedChars = ['number', 'lowerLetter', 'upperLetter', 'specialChar'].filter(item => this[item]).map(item => this.chars[item]).join('');
-
-                let password = [], rands = [], rand = 0;
-                for (let index = 0; index < this.length; index++) {
-
-                    // 尽可能不让字符重复
+        convert: function() {
+            this.$nextTick( () => {
+                let e = ["number", "lowerLetter", "upperLetter", "specialChar"].filter(e => this[e]).map(e => this.chars[e]).join("")
+                  , t = []
+                  , r = []
+                  , n = 0;
+                for (let l = 0; l < this.length; l++) {
                     do {
-                        rand = Math.floor(Math.random() * exceptedChars.length);
-                    } while (rands.includes(rand) && rands.length < exceptedChars.length);
-
-                    rands.push(rand);
-                    password.push(exceptedChars[rand]);
+                        n = Math.floor(Math.random() * e.length)
+                    } while (r.includes(n) && r.length < e.length);
+                    r.push(n),
+                    t.push(e[n])
                 }
-
-                this.resultContent = password.join('');
-            });
-        },
-
-        getResult: function () {
-            this.$refs.rstCode.select();
-        },
-
-
-        copyResult: function () {
-            // 选中要复制的内容
-            this.getResult();
-
-            if ('clipboard' in navigator) {
-                navigator.clipboard.writeText(this.resultContent)
-                .catch(err => {
-                    console.error('复制失败: ', err);
-                });
-            }else{
-                alert("您的浏览器不支持 clipboard API, 请手动复制")
+                this.resultContent = t.join("")
             }
+            )
+        },
+        getResult: function() {
+            this.$refs.rstCode.select()
+        },
+        copyResult: function() {
+            this.getResult(),
+            "clipboard"in navigator ? navigator.clipboard.writeText(this.resultContent).catch(e => {
+                console.error("复制失败: ", e)
+            }
+            ) : alert("您的浏览器不支持 clipboard API, 请手动复制")
         }
     }
 });
