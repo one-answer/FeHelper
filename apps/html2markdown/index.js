@@ -170,9 +170,7 @@ new Vue({
             e.contains("preview-closed") ? e.remove("preview-closed") : e.add("preview-closed")
         },
         exportContent: function(e) {
-            let t = "<html><head><meta charset='utf-8'/><title></title><style>" + DemoTpl.printCss + "</style></head>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3811349067654166"
-     crossorigin="anonymous"></script><body class='markdown-body'>" + this.getParsedHtml() + "</body></html>"
+            let t = "<html><head><meta charset='utf-8'/><title></title><style>" + DemoTpl.printCss + "</style></head><body class='markdown-body'>" + this.getParsedHtml() + "</body></html>"
               , o = window.open();
             o.focus(),
             o.document.write(t),
